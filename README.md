@@ -1,1 +1,3 @@
 # final_project.github.io
+
+This is the code for final project of course P8105 Data Science. The project examines the association between watershed land use and lake water quality across the United States using data from the EPA National Lakes Assessment 2022. We focus on agricultural and developed land use and their relationships with nutrient concentrations (total nitrogen and total phosphorus) and water clarity (Secchi depth).
