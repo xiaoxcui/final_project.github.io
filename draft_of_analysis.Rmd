@@ -1,0 +1,59 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+
+## Brief introductions of NLA and the datasets
+
+National Lakes Assessment (NLA): 
+It is a nationwide survey conducted by the US Environmental Protection Agency (EPA). The survey is conducted every five years since 2007, which uses a probability-based sampling design to provide statistically representative estimates of lake conditions across contiguous United States. The analysis uses data from the NLA 2022 surveying natural and man-made freshwater lakes. Eligible criteria include having a surface area greater than 1 hectare, a minimum depth of 1 meter, at least 0.1 hectare of open water, and a minimum water retention time of one week.
+
+## Data Cleaning
+
+**Merging strategy**
+`UID`: Unique identifier for the site/visit (presents in `siteinfo`, `secchi` and `waterchem` datasets)
+`site_id`: The NLA Site ID for the study and year sampled. Preferred form is NLAnn_MM-xxxxx  where  nn is current cycle year (07, 12, 17, etc), MM is two letter state code, and xxxxx is between 10001 and 99999. No missing values allowed. (presents in all datasets)
+`unique_id`: Unique site ID based on location that does not depend on year sampled or any other factor. Form is NLA_ss_nnnnn where ss state and nnnnn is number that starts at 10001. No missing or \blank\"" values allowed. (presents in all datasets)
+`visit_no`: Sequential number of visit to site (presents in `siteinfo`, `secchi` and `waterchem` datasets) 
+
+site: A selected sampling location, recorded as `site_id` (Each lake has one `site_id` in a survey year; The same lake can have different `site_id` in different survey years). 
+visit: A sampling event at a site, recorded as `visit_no` (1 = first visit; 2 = second visit). 
+location: The actual location of a sampling site (based on longitude and latitude) regardless of survey year, recorded as `unique_id`. 
+UID: A unique identifier assigned to each sampling visit; every sampling visit has different UID. 
+
+Based on the observation of these identifier variables, we can first merge the `siteinfo`, `secchi` and `waterchem` datasets using variable `uid`, then merge the `landscape` dataset using `site_id`. Within the same survey year, `site_id` and `unique_id` can be considered equivalent. However, we use `site_id` because one site has inconsistent `unique_id` values between the `landscape` and other datasets. 
+
+**Select variables**
+`waterchem`: keep `uid`, `site_id`, `visit_no`, `ntl_result` (total nitrogen concentration), `ntl_qa_flag` (total nitrogen quality assurance flag; `H` means exceeded holding time), `ptl_result` (total phosphorus concentration), `ptl_qa_flag` (total phosphorus quality assurance flag), `date_col` (date of sample collection)
+
+`secchi`: keep `uid`, 
+
+```{r}
+library(tidyverse)
+
+# Load datasets
+siteinfo = 
+  read.csv("data/nla22_siteinfo.csv") |>
+  janitor::clean_names()
+
+secchi = 
+  read.csv("data/nla22_secchi.csv") |>
+  janitor::clean_names()
+
+waterchem = 
+  read.csv("data/nla22_waterchem_wide.csv") |>
+  janitor::clean_names()
+
+landscape = 
+  read.csv("data/nla2022_landscape_wide_0.csv") |>
+  janitor::clean_names()
+
+# Combine datasets by UID
+nla_merged = 
+  waterchem |> 
+  left_join(secchi, by = "uid") |> 
+  left_join(siteinfo, by = "uid") |>
+  left_join(landscape, by = "site_id")
+```
+
